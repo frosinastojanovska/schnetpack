@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn.init import xavier_uniform_
 
 from schnetpack.nn.base import Dense
 from schnetpack import Properties
@@ -25,19 +26,20 @@ class SchNetInteraction(nn.Module):
     """
 
     def __init__(
-        self,
-        n_atom_basis,
-        n_spatial_basis,
-        n_filters,
-        cutoff,
+            self,
+            n_atom_basis,
+            n_spatial_basis,
+            n_filters,
+            cutoff,
         cutoff_network=CosineCutoff,
-        normalize_filter=False,
+            normalize_filter=False,
+            weight_init=xavier_uniform_
     ):
         super(SchNetInteraction, self).__init__()
         # filter block used in interaction block
         self.filter_network = nn.Sequential(
-            Dense(n_spatial_basis, n_filters, activation=shifted_softplus),
-            Dense(n_filters, n_filters),
+            Dense(n_spatial_basis, n_filters, activation=shifted_softplus, weight_init=weight_init),
+            Dense(n_filters, n_filters, weight_init=weight_init),
         )
         # cutoff layer used in interaction block
         self.cutoff_network = cutoff_network(cutoff)
@@ -50,9 +52,10 @@ class SchNetInteraction(nn.Module):
             cutoff_network=self.cutoff_network,
             activation=shifted_softplus,
             normalize_filter=normalize_filter,
+            weight_init=weight_init
         )
         # dense layer
-        self.dense = Dense(n_atom_basis, n_atom_basis, bias=True, activation=None)
+        self.dense = Dense(n_atom_basis, n_atom_basis, bias=True, activation=None, weight_init=weight_init)
 
     def forward(self, x, r_ij, neighbors, neighbor_mask, f_ij=None):
         """Compute interaction output.
@@ -118,20 +121,21 @@ class SchNet(nn.Module):
     """
 
     def __init__(
-        self,
-        n_atom_basis=128,
-        n_filters=128,
-        n_interactions=3,
-        cutoff=5.0,
-        n_gaussians=25,
-        normalize_filter=False,
-        coupled_interactions=False,
-        return_intermediate=False,
-        max_z=100,
+            self,
+            n_atom_basis=128,
+            n_filters=128,
+            n_interactions=3,
+            cutoff=5.0,
+            n_gaussians=25,
+            normalize_filter=False,
+            coupled_interactions=False,
+            return_intermediate=False,
+            max_z=100,
         cutoff_network=CosineCutoff,
-        trainable_gaussians=False,
-        distance_expansion=None,
-        charged_systems=False,
+            trainable_gaussians=False,
+            distance_expansion=None,
+            charged_systems=False,
+            weight_init=xavier_uniform_
     ):
         super(SchNet, self).__init__()
 
@@ -163,6 +167,7 @@ class SchNet(nn.Module):
                         cutoff_network=cutoff_network,
                         cutoff=cutoff,
                         normalize_filter=normalize_filter,
+                        weight_init=weight_init
                     )
                 ]
                 * n_interactions
@@ -178,6 +183,7 @@ class SchNet(nn.Module):
                         cutoff_network=cutoff_network,
                         cutoff=cutoff,
                         normalize_filter=normalize_filter,
+                        weight_init=weight_init
                     )
                     for _ in range(n_interactions)
                 ]

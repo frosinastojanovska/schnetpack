@@ -1,9 +1,9 @@
 import torch
 from torch import nn
+from torch.nn.init import xavier_uniform_
 
 from schnetpack.nn import Dense
 from schnetpack.nn.base import Aggregate
-
 
 __all__ = ["CFConv"]
 
@@ -25,19 +25,20 @@ class CFConv(nn.Module):
     """
 
     def __init__(
-        self,
-        n_in,
-        n_filters,
-        n_out,
-        filter_network,
-        cutoff_network=None,
-        activation=None,
-        normalize_filter=False,
-        axis=2,
+            self,
+            n_in,
+            n_filters,
+            n_out,
+            filter_network,
+            cutoff_network=None,
+            activation=None,
+            normalize_filter=False,
+            axis=2,
+            weight_init=xavier_uniform_
     ):
         super(CFConv, self).__init__()
-        self.in2f = Dense(n_in, n_filters, bias=False, activation=None)
-        self.f2out = Dense(n_filters, n_out, bias=True, activation=activation)
+        self.in2f = Dense(n_in, n_filters, bias=False, activation=None, weight_init=weight_init)
+        self.f2out = Dense(n_filters, n_out, bias=True, activation=activation, weight_init=weight_init)
         self.filter_network = filter_network
         self.cutoff_network = cutoff_network
         self.agg = Aggregate(axis=axis, mean=normalize_filter)

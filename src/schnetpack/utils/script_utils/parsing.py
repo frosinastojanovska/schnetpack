@@ -51,7 +51,7 @@ def get_mode_parsers():
     train_parser.add_argument(
         "--parallel",
         help="Run data-parallel on all available GPUs (specify with environment"
-        " variable CUDA_VISIBLE_DEVICES)",
+             " variable CUDA_VISIBLE_DEVICES)",
         action="store_true",
     )
     train_parser.add_argument(
@@ -94,7 +94,7 @@ def get_mode_parsers():
         "--lr_patience",
         type=int,
         help="Epochs without improvement before reducing the learning rate "
-        "(default: %(default)s)",
+             "(default: %(default)s)",
         default=25,
     )
     train_parser.add_argument(
@@ -151,7 +151,7 @@ def get_mode_parsers():
     eval_parser.add_argument(
         "--parallel",
         help="Run data-parallel on all available GPUs (specify with environment"
-        " variable CUDA_VISIBLE_DEVICES)",
+             " variable CUDA_VISIBLE_DEVICES)",
         action="store_true",
     )
     eval_parser.add_argument(
@@ -195,6 +195,11 @@ def get_model_parsers():
         type=int,
         default=50,
         help="Number of Gaussians to expand distances (default: %(default)s)",
+    )
+
+    schnet_parser.add_argument(
+        "--weight_init", help="Initialization distribution of the weights.", choices=["xavier", "normal", "bernoulli"],
+        default="xavier"
     )
 
     wacsf_parser = argparse.ArgumentParser(add_help=False, parents=[model_parser])
@@ -252,7 +257,7 @@ def get_model_parsers():
         default=["H", "C", "N", "O", "F"],
         nargs="+",
         help="List of elements to be used for symmetry functions "
-        "(default: %(default)s).",
+             "(default: %(default)s).",
     )
 
     return model_parser, schnet_parser, wacsf_parser
@@ -343,7 +348,7 @@ def get_data_parsers():
         "--num_heavy_atoms",
         type=int,
         help="Number of heavy atoms that will be loaded into the database."
-        " (default: %(default)s)",
+             " (default: %(default)s)",
         default=8,
     )
     matproj_parser = argparse.ArgumentParser(add_help=False, parents=[data_parser])
@@ -424,7 +429,7 @@ def get_data_parsers():
         "--rho",
         type=float,
         help="Energy-force trade-off. For rho=0, use forces only. "
-        "(default: %(default)s)",
+             "(default: %(default)s)",
         default=0.1,
     )
     omdb_parser = argparse.ArgumentParser(add_help=False, parents=[data_parser])
@@ -495,7 +500,7 @@ def get_data_parsers():
         "--force",
         type=str,
         help="Name of force property in database. Alias for‚ derivative + setting "
-        "negative_dr. (default: %(default)s)",
+             "negative_dr. (default: %(default)s)",
         default=None,
     )
     custom_data_parser.add_argument(
@@ -520,7 +525,7 @@ def get_data_parsers():
         "--output_module",
         type=str,
         help="Select matching output module for selected property. (default: %("
-        "default)s)",
+             "default)s)",
         default="atomwise",
         choices=[
             "atomwise",

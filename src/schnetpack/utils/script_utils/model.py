@@ -3,8 +3,25 @@ import logging
 import schnetpack as spk
 from ase.data import atomic_numbers
 import torch.nn as nn
+from torch.nn.init import normal_
 
 __all__ = ["get_representation", "get_output_module", "get_model"]
+
+
+def _no_grad_bernoulli_(tensor):
+    with torch.no_grad():
+        return tensor.bernoulli_()
+
+
+def bernoulli(tensor):
+    # type: (Tensor) -> Tensor
+    r"""Fills the input Tensor with values drawn from the bernoulli
+    distribution :math:`\mathcal{N}(\text{mean}, \text{std}^2)`.
+
+    Args:
+        tensor: an n-dimensional `torch.Tensor`
+    """
+    return _no_grad_bernoulli_(tensor)
 
 
 def get_representation(args, train_loader=None):
@@ -13,14 +30,38 @@ def get_representation(args, train_loader=None):
 
         cutoff_network = spk.nn.cutoff.get_cutoff_by_string(args.cutoff_function)
 
-        return spk.representation.SchNet(
-            n_atom_basis=args.features,
-            n_filters=args.features,
-            n_interactions=args.interactions,
-            cutoff=args.cutoff,
-            n_gaussians=args.num_gaussians,
-            cutoff_network=cutoff_network,
-        )
+        if args.weight_init != 'xavier':
+            if args.weight_init == 'normal':
+                print('Initialization of weights with normal distribution')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=normal_
+                )
+            elif args.weight_init == 'bernoulli':
+                print('Initialization of weights with bernoulli distribution')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=bernoulli
+                )
+        else:
+            return spk.representation.SchNet(
+                n_atom_basis=args.features,
+                n_filters=args.features,
+                n_interactions=args.interactions,
+                cutoff=args.cutoff,
+                n_gaussians=args.num_gaussians,
+                cutoff_network=cutoff_network,
+            )
 
     elif args.model == "wacsf":
         sfmode = ("weighted", "Behler")[args.behler]

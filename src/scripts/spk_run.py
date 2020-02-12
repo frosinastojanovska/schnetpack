@@ -55,7 +55,7 @@ def main(args):
         )
 
         # build model
-        model = get_model(args, train_loader, mean, stddev, atomref, logging=logging)
+        model = get_model(args, train_loader, mean, stddev, atomref, logging=logging, weight_init=None)
 
         # build trainer
         logging.info("training...")
