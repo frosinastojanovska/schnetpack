@@ -1,9 +1,11 @@
 import torch
 import logging
+import functools
 import schnetpack as spk
 from ase.data import atomic_numbers
 import torch.nn as nn
 from torch.nn.init import normal_
+import torch.distributions as tdist
 
 __all__ = ["get_representation", "get_output_module", "get_model"]
 
@@ -22,6 +24,21 @@ def bernoulli(tensor):
         tensor: an n-dimensional `torch.Tensor`
     """
     return _no_grad_bernoulli_(tensor)
+
+
+def _no_grad_beta_(beta1, beta2, tensor):
+    with torch.no_grad():
+        beta_dist = tdist.Beta(torch.tensor([beta1]), torch.tensor([beta2]))
+        tensor.data = beta_dist.sample(tensor.shape).squeeze(-1).clone()
+        return tensor
+
+
+def beta(beta1, beta2, tensor):
+    return _no_grad_beta_(beta1, beta2, tensor)
+
+
+def beta_args(args):
+    return functools.partial(beta, args.beta_args[0], args.beta_args[1])
 
 
 def get_representation(args, train_loader=None):
@@ -52,6 +69,18 @@ def get_representation(args, train_loader=None):
                     n_gaussians=args.num_gaussians,
                     cutoff_network=cutoff_network,
                     weight_init=bernoulli
+                )
+            elif args.weight_init == 'beta':
+                print('Initialization of weights with bernoulli distribution')
+                beta_intit_func = beta_args(args)
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=beta_intit_func
                 )
         else:
             return spk.representation.SchNet(

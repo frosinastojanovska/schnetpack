@@ -198,8 +198,17 @@ def get_model_parsers():
     )
 
     schnet_parser.add_argument(
-        "--weight_init", help="Initialization distribution of the weights.", choices=["xavier", "normal", "bernoulli"],
+        "--weight_init", help="Initialization distribution of the weights.",
+        choices=["xavier", "normal", "bernoulli", "beta"],
         default="xavier"
+    )
+
+    schnet_parser.add_argument(
+        "--beta_args",
+        help="Parameters for the beta distribution initialization.",
+        type=float,
+        nargs=2,
+        default=[0.5, 0.5]
     )
 
     wacsf_parser = argparse.ArgumentParser(add_help=False, parents=[model_parser])
