@@ -4,7 +4,8 @@ import functools
 import schnetpack as spk
 from ase.data import atomic_numbers
 import torch.nn as nn
-from torch.nn.init import normal_
+from torch.nn.init import normal_, uniform_, ones_, zeros_, xavier_uniform_, xavier_normal_, kaiming_uniform_, \
+    kaiming_normal_
 import torch.distributions as tdist
 
 __all__ = ["get_representation", "get_output_module", "get_model"]
@@ -48,7 +49,40 @@ def get_representation(args, train_loader=None):
         cutoff_network = spk.nn.cutoff.get_cutoff_by_string(args.cutoff_function)
 
         if args.weight_init != 'xavier':
-            if args.weight_init == 'normal':
+            if args.weight_init == 'uniform':
+                print('Initialization of weights with uniform distribution')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=uniform_
+                )
+            elif args.weight_init == 'zeros':
+                print('Initialization of weights with zeros')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=zeros_
+                )
+            elif args.weight_init == 'ones':
+                print('Initialization of weights with ones')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=ones_
+                )
+            elif args.weight_init == 'normal':
                 print('Initialization of weights with normal distribution')
                 return spk.representation.SchNet(
                     n_atom_basis=args.features,
@@ -81,6 +115,39 @@ def get_representation(args, train_loader=None):
                     n_gaussians=args.num_gaussians,
                     cutoff_network=cutoff_network,
                     weight_init=beta_intit_func
+                )
+            elif args.weight_init == 'xavier_normal':
+                print('Initialization of weights with xavier normal distribution')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=xavier_normal_
+                )
+            elif args.weight_init == 'kaiming':
+                print('Initialization of weights with He initialization')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=kaiming_uniform_
+                )
+            elif args.weight_init == 'kaiming_normal':
+                print('Initialization of weights with He normal initialization')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=kaiming_normal_
                 )
         else:
             return spk.representation.SchNet(
