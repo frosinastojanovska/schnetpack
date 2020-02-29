@@ -161,6 +161,9 @@ def get_mode_parsers():
         default=100,
     )
     eval_parser.add_argument(
+        "--split_path", help="Path / destination of npz with data splits", default=None
+    )
+    eval_parser.add_argument(
         "--split",
         help="Evaluate trained model on given split",
         choices=["train", "validation", "test"],
