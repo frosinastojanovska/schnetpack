@@ -17,13 +17,6 @@ def _no_grad_bernoulli_(tensor):
 
 
 def bernoulli(tensor):
-    # type: (Tensor) -> Tensor
-    r"""Fills the input Tensor with values drawn from the bernoulli
-    distribution :math:`\mathcal{N}(\text{mean}, \text{std}^2)`.
-
-    Args:
-        tensor: an n-dimensional `torch.Tensor`
-    """
     return _no_grad_bernoulli_(tensor)
 
 

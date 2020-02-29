@@ -81,6 +81,7 @@ class CFConv(nn.Module):
 
         # element-wise multiplication, aggregating and Dense layer
         y = y * W
+        y.clamp_(-3.0e+15, 3.0e+15)
         y = self.agg(y, pairwise_mask)
         y = self.f2out(y)
         return y

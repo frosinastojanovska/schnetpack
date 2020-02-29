@@ -239,6 +239,7 @@ class SchNet(nn.Module):
         for interaction in self.interactions:
             v = interaction(x, r_ij, neighbors, neighbor_mask, f_ij=f_ij)
             x = x + v
+            x.clamp_(-3.0e+15, 3.0e+15)
             if self.return_intermediate:
                 xs.append(x)
 

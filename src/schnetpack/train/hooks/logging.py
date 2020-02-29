@@ -109,6 +109,7 @@ class CSVHook(LoggingHook):
         if os.path.exists(self.log_path):
             remove_file = False
             with open(self.log_path, "r") as f:
+                lines = f.readlines()
                 # Ensure there is one entry apart from header
                 lines = f.readlines()
                 if len(lines) > 1:
