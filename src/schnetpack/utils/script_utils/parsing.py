@@ -199,8 +199,8 @@ def get_model_parsers():
 
     schnet_parser.add_argument(
         "--weight_init", help="Initialization distribution of the weights.",
-        choices=["uniform", "ones", "zeros", "normal", "bernoulli", "beta", "xavier",
-                 "xavier_normal", "kaiming", "kaiming_normal"],
+        choices=["xavier", "xavier_normal", "kaiming", "kaiming_normal", "lecun", "lecun_normal",
+                 "uniform", "ones", "zeros", "normal", "bernoulli", "beta"],
         default="xavier"
     )
 

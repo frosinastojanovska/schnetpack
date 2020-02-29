@@ -1,11 +1,12 @@
+import math
 import torch
 import logging
 import functools
 import schnetpack as spk
 from ase.data import atomic_numbers
 import torch.nn as nn
-from torch.nn.init import normal_, uniform_, ones_, zeros_, xavier_uniform_, xavier_normal_, kaiming_uniform_, \
-    kaiming_normal_
+from torch.nn.init import normal_, uniform_, ones_, zeros_, xavier_uniform_, xavier_normal_, _no_grad_uniform_, \
+    _no_grad_normal_, _calculate_fan_in_and_fan_out
 import torch.distributions as tdist
 
 __all__ = ["get_representation", "get_output_module", "get_model"]
@@ -35,6 +36,49 @@ def beta_args(args):
     return functools.partial(beta, args.beta_args[0], args.beta_args[1])
 
 
+def kaiming_normal(tensor):
+    fan_in, _ = _calculate_fan_in_and_fan_out(tensor)
+    std = math.sqrt(2.0 / float(fan_in))
+
+    return _no_grad_normal_(tensor, 0., std)
+
+
+def kaiming_uniform(tensor):
+    fan_in, _ = _calculate_fan_in_and_fan_out(tensor)
+    std = math.sqrt(2.0 / float(fan_in))
+    a = math.sqrt(3.0) * std  # Calculate uniform bounds from standard deviation
+
+    return _no_grad_uniform_(tensor, -a, a)
+
+
+def lecun_normal(tensor):
+    fan_in, _ = _calculate_fan_in_and_fan_out(tensor)
+    std = math.sqrt(1.0 / float(fan_in))
+
+    return _no_grad_normal_(tensor, 0., std)
+
+
+def lecun_uniform(tensor):
+    fan_in, _ = _calculate_fan_in_and_fan_out(tensor)
+    std = math.sqrt(1.0 / float(fan_in))
+    a = math.sqrt(3.0) * std  # Calculate uniform bounds from standard deviation
+
+    return _no_grad_uniform_(tensor, -a, a)
+
+
+def truncated_normal_(tensor, mean=0, std=0.05):
+    size = tensor.shape
+    tmp = tensor.new_empty(size + (4,)).normal_()
+    valid = (tmp < 2 * std) & (tmp > -2 * std)
+    ind = valid.max(-1, keepdim=True)[1]
+    tensor.data.copy_(tmp.gather(-1, ind).squeeze(-1))
+    tensor.data.mul_(std).add_(mean)
+
+
+def uniform(tensor):
+    return uniform_(tensor, a=-0.05, b=0.05)
+
+
 def get_representation(args, train_loader=None):
     # build representation
     if args.model == "schnet":
@@ -42,7 +86,62 @@ def get_representation(args, train_loader=None):
         cutoff_network = spk.nn.cutoff.get_cutoff_by_string(args.cutoff_function)
 
         if args.weight_init != 'xavier':
-            if args.weight_init == 'uniform':
+            if args.weight_init == 'xavier_normal':
+                print('Initialization of weights with xavier normal distribution')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=xavier_normal_
+                )
+            elif args.weight_init == 'kaiming':
+                print('Initialization of weights with He initialization')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=kaiming_uniform
+                )
+            elif args.weight_init == 'kaiming_normal':
+                print('Initialization of weights with He normal initialization')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=kaiming_normal
+                )
+            elif args.weight_init == 'lecun':
+                print('Initialization of weights with He initialization')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=lecun_uniform
+                )
+            elif args.weight_init == 'lecun_normal':
+                print('Initialization of weights with He normal initialization')
+                return spk.representation.SchNet(
+                    n_atom_basis=args.features,
+                    n_filters=args.features,
+                    n_interactions=args.interactions,
+                    cutoff=args.cutoff,
+                    n_gaussians=args.num_gaussians,
+                    cutoff_network=cutoff_network,
+                    weight_init=lecun_normal
+                )
+            elif args.weight_init == 'uniform':
                 print('Initialization of weights with uniform distribution')
                 return spk.representation.SchNet(
                     n_atom_basis=args.features,
@@ -51,7 +150,7 @@ def get_representation(args, train_loader=None):
                     cutoff=args.cutoff,
                     n_gaussians=args.num_gaussians,
                     cutoff_network=cutoff_network,
-                    weight_init=uniform_
+                    weight_init=uniform
                 )
             elif args.weight_init == 'zeros':
                 print('Initialization of weights with zeros')
@@ -84,7 +183,7 @@ def get_representation(args, train_loader=None):
                     cutoff=args.cutoff,
                     n_gaussians=args.num_gaussians,
                     cutoff_network=cutoff_network,
-                    weight_init=normal_
+                    weight_init=truncated_normal_
                 )
             elif args.weight_init == 'bernoulli':
                 print('Initialization of weights with bernoulli distribution')
@@ -108,39 +207,6 @@ def get_representation(args, train_loader=None):
                     n_gaussians=args.num_gaussians,
                     cutoff_network=cutoff_network,
                     weight_init=beta_intit_func
-                )
-            elif args.weight_init == 'xavier_normal':
-                print('Initialization of weights with xavier normal distribution')
-                return spk.representation.SchNet(
-                    n_atom_basis=args.features,
-                    n_filters=args.features,
-                    n_interactions=args.interactions,
-                    cutoff=args.cutoff,
-                    n_gaussians=args.num_gaussians,
-                    cutoff_network=cutoff_network,
-                    weight_init=xavier_normal_
-                )
-            elif args.weight_init == 'kaiming':
-                print('Initialization of weights with He initialization')
-                return spk.representation.SchNet(
-                    n_atom_basis=args.features,
-                    n_filters=args.features,
-                    n_interactions=args.interactions,
-                    cutoff=args.cutoff,
-                    n_gaussians=args.num_gaussians,
-                    cutoff_network=cutoff_network,
-                    weight_init=kaiming_uniform_
-                )
-            elif args.weight_init == 'kaiming_normal':
-                print('Initialization of weights with He normal initialization')
-                return spk.representation.SchNet(
-                    n_atom_basis=args.features,
-                    n_filters=args.features,
-                    n_interactions=args.interactions,
-                    cutoff=args.cutoff,
-                    n_gaussians=args.num_gaussians,
-                    cutoff_network=cutoff_network,
-                    weight_init=kaiming_normal_
                 )
         else:
             return spk.representation.SchNet(

@@ -12,6 +12,9 @@ src/sacred_scripts/experiments/*
 src/scripts/data/
 src/scripts/training/
 
+# experiments data
+experiments/data/*
+
 docs/tutorials/*.db
 docs/tutorials/*.xyz
 docs/tutorials/qm9tut
