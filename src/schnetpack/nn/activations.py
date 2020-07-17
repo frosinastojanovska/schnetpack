@@ -16,3 +16,17 @@ def shifted_softplus(x):
 
     """
     return functional.softplus(x) - np.log(2.0)
+
+
+def swish(x, beta=1):
+    """Compute swish activation function
+
+    Args:
+        x (torch.Tensor): input tensor.
+        beta (int): beta value of swish
+
+    Returns:
+        torch.Tensor: swish of input.
+
+    """
+    return x * functional.sigmoid(beta * x)

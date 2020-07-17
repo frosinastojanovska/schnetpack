@@ -33,12 +33,13 @@ class SchNetInteraction(nn.Module):
             cutoff,
         cutoff_network=CosineCutoff,
             normalize_filter=False,
+            activation=shifted_softplus,
             weight_init=xavier_uniform_
     ):
         super(SchNetInteraction, self).__init__()
         # filter block used in interaction block
         self.filter_network = nn.Sequential(
-            Dense(n_spatial_basis, n_filters, activation=shifted_softplus, weight_init=weight_init),
+            Dense(n_spatial_basis, n_filters, activation=activation, weight_init=weight_init),
             Dense(n_filters, n_filters, weight_init=weight_init),
         )
         # cutoff layer used in interaction block
@@ -50,7 +51,7 @@ class SchNetInteraction(nn.Module):
             n_atom_basis,
             self.filter_network,
             cutoff_network=self.cutoff_network,
-            activation=shifted_softplus,
+            activation=activation,
             normalize_filter=normalize_filter,
             weight_init=weight_init
         )
@@ -135,6 +136,7 @@ class SchNet(nn.Module):
             trainable_gaussians=False,
             distance_expansion=None,
             charged_systems=False,
+            activation=shifted_softplus,
             weight_init=xavier_uniform_
     ):
         super(SchNet, self).__init__()
@@ -167,6 +169,7 @@ class SchNet(nn.Module):
                         cutoff_network=cutoff_network,
                         cutoff=cutoff,
                         normalize_filter=normalize_filter,
+                        activation=activation,
                         weight_init=weight_init
                     )
                 ]
@@ -183,6 +186,7 @@ class SchNet(nn.Module):
                         cutoff_network=cutoff_network,
                         cutoff=cutoff,
                         normalize_filter=normalize_filter,
+                        activation=activation,
                         weight_init=weight_init
                     )
                     for _ in range(n_interactions)

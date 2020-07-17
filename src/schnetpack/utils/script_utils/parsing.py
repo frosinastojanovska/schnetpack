@@ -208,6 +208,12 @@ def get_model_parsers():
     )
 
     schnet_parser.add_argument(
+        "--activation_function", help="Activation function in the hidden layers.",
+        choices=["relu", "leaky_relu", "elu", "selu", "swish"],
+        default="relu"
+    )
+
+    schnet_parser.add_argument(
         "--beta_args",
         help="Parameters for the beta distribution initialization.",
         type=float,
