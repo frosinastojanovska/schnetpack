@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 def plot_loss(data, data_labels_to_plot, save_file, x_label='', y_label='', title=''):
     assert len(data_labels_to_plot) > 0
+    plt.clf()
     plt.style.use('classic')
     sns.set()
     sns.set_style("ticks")
@@ -17,7 +18,7 @@ def plot_loss(data, data_labels_to_plot, save_file, x_label='', y_label='', titl
     plt.legend(ncol=1, loc='upper right')
     plt.xlabel(x_label, fontsize=15)
     plt.ylabel(y_label, fontsize=15)
-    plt.ylim(0, 0.15)
+    plt.ylim(0.04, 0.3)
     sns.despine()
     plt.savefig(save_file)
 
@@ -35,20 +36,36 @@ def read_log_file(file):
     return data
 
 
-def plot_train_progress():
-    labels = ['uniform', 'normal', 'lecun', 'lecun_normal', 'xavier', 'xavier_normal', 'kaiming', 'kaiming_normal']
+def plot_train_progress(labels, suffix):
     all_data = {}
     for label in labels:
         all_data[label] = read_log_file(f'data/schnet_{label}/log/log.csv')['Validation loss']
-    plot_loss(all_data, labels, 'validation_loss.png', x_label='Epoch number', y_label='Loss value',
+    plot_loss(all_data, labels, f'validation_loss_{suffix}.png', x_label='Epoch number', y_label='Loss value',
               title='Validation loss')
 
+    all_data = {}
+    for label in labels:
+        all_data[label] = read_log_file(f'data/schnet_{label}/log/log.csv')['Train loss']
+    plot_loss(all_data, labels, f'train_loss_{suffix}.png', x_label='Epoch number', y_label='Loss value',
+              title='Train loss')
 
-def plot_testing_results():
-    labels = ['uniform', 'normal', 'lecun', 'lecun_normal', 'xavier', 'xavier_normal', 'kaiming', 'kaiming_normal']
+    all_data = {}
+    for label in labels:
+        all_data[label] = read_log_file(f'data/schnet_{label}/log/log.csv')['MAE_energy_U0']
+    plot_loss(all_data, labels, f'mae_energy_{suffix}.png', x_label='Epoch number', y_label='MAE value',
+              title='MAE energy U0')
+
+    all_data = {}
+    for label in labels:
+        all_data[label] = read_log_file(f'data/schnet_{label}/log/log.csv')['RMSE_energy_U0']
+    plot_loss(all_data, labels, f'rmse_energy_{suffix}.png', x_label='Epoch number', y_label='RMSE value',
+              title='RMSE energy U0')
+
+
+def plot_testing_results(labels, suffix):
     data = {'method': [], 'Dataset and metric': [], 'Value': []}
     for label in labels:
-        data['method'].extend([label] * 6)
+        data['method'].extend([label.split('_')[-1]] * 6)
         with open(f'data/schnet_{label}/test_eval.txt', 'r') as f:
             _ = f.readline()
             mae, rmse = list(map(float, f.readline().strip().split(',')))
@@ -65,7 +82,7 @@ def plot_testing_results():
             data['Dataset and metric'].extend(['MAE train', 'RMSE train'])
             data['Value'].extend([mae, rmse])
 
-    pd.DataFrame.from_dict(data).to_csv('evaluation.csv')
+    pd.DataFrame.from_dict(data).to_csv(f'evaluation_{suffix}.csv')
 
     sns.set_style("whitegrid")
     sns.stripplot(x="Dataset and metric", y="Value", hue="method", data=pd.DataFrame.from_dict(data), size=10,
@@ -76,9 +93,13 @@ def plot_testing_results():
     plt.title('Method evaluation', fontsize=18)
     plt.xlabel('Dataset and metric', fontsize=15)
     plt.ylabel('Value', fontsize=15)
-    plt.savefig('evaluation.png', bbox_inches='tight')
+    plt.savefig(f'evaluation_{suffix}.png', bbox_inches='tight')
 
 
 if __name__ == '__main__':
-    # plot_train_progress()
-    plot_testing_results()
+    # labels = ['uniform', 'normal', 'lecun', 'lecun_normal', 'xavier', 'xavier_normal', 'kaiming', 'kaiming_normal']
+    # plot_train_progress(labels, 'init')
+    # plot_testing_results(labels, 'init')
+    labels = ['activation_relu', 'activation_leaky_relu', 'activation_elu', 'activation_selu', 'activation_swish']
+    # plot_train_progress(labels, 'activation')
+    plot_testing_results(labels, 'activation')
